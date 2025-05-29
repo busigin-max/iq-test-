@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🧠 Тест на IQ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right bottom, #6a82fb, #fc5c7d);
+      color: white;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      padding: 40px 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      transition: all 0.6s ease;
+      opacity: 0;
+      transform: translateY(50px);
+      animation: fadeInUp 1s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    .question {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    label:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.02);
+    }
+
+    input[type="radio"] {
+      margin-right: 10px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #fff, #f0f0f0);
+      color: #4a90e2;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #ddd;
+      font-size: 0.9rem;
+    }
+
+    .chart-container {
+      height: 300px;
+      margin: 20px auto;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1><img src="https://emojipedia.org/static/images/emoji/apple/15.4/brain_1f9e0.png"  alt="🧠" width="30"> Тест на IQ</h1>
+  <input type="text" id="username" placeholder="Введите ваше имя" style="padding: 10px; width: 100%; margin-bottom: 10px;">
+  <button onclick="startTest()">Начать тест</button>
+</div>
+
+<div class="container hidden" id="testContainer">
+  <h2>🧠 Тест на IQ</h2>
+  <div id="questionContainer"></div>
+  <button onclick="nextQuestion()" id="nextBtn">Следующий вопрос</button>
+</div>
+
+<div class="container hidden" id="dashboard">
+  <h2>📊 Ваш результат</h2>
+  <p id="userGreeting"></p>
+  <p><strong>Последний результат:</strong> <span id="lastScore">-</span></p>
+  <div class="chart-container">
+    <canvas id="scoreChart"></canvas>
+  </div>
+  <button onclick="restartTest()">🔄 Пройти снова</button>
+</div>
+
+<footer>
+  &copy; 2025 Тест на IQ — Все права защищены
+</footer>
+
+<script>
+  const questions = [
+    { text: "Какое число должно быть следующим? 1, 2, 4, 7, 11, ___", options: ["14", "15", "16", "17"], correct: "c" },
+    { text: "Если A = 1, B = 2, D = 4, то чему равно F?", options: ["5", "6", "7", "8"], correct: "b" },
+    { text: "Сколько месяцев имеют 28 дней?", options: ["Один", "Два", "Все", "Ни одного"], correct: "c" },
+    { text: "Какое слово лишнее?", options: ["Слон", "Лев", "Кенгуру", "Бегемот"], correct: "d" },
+    { text: "Какое слово написано правильно?", options: ["Необходимость", "Необходимость", "Ниобходимость", "Ниобходимость"], correct: "a" },
+    { text: "Число : цифра = Слово : ___", options: ["буква", "язык", "предложение", "фраза"], correct: "a" },
+    { text: "A, C, E, G, ___", options: ["H", "I", "J", "K"], correct: "b" },
+    { text: "Если все цветы — растения, а некоторые растения — ядовитые, то:", options: ["Все цветы ядовиты", "Некоторые цветы могут быть ядовитыми", "Цветы не могут быть ядовитыми", "Все неверно"], correct: "b" },
+    { text: "Какое число больше: 0.1 или 0.11?", options: ["0.1", "0.11", "равны", "неопределенно"], correct: "b" },
+    { text: "Какой символ должен быть вместо вопросительного знака? 🔺 + 🔺 = ⬛; 🔺 + ⬛ = 🔲; 🔲 + 🔺 = ?", options: ["🔲", "🔺", "⬛", "🔵"], correct: "c" },
+    { text: "Выберите продолжение: 2, 4, 8, 16, ___", options: ["24", "30", "32", "40"], correct: "c" },
+    { text: "Какое число нужно добавить? 10 + ___ = 25 - 5", options: ["5", "10", "15", "20"], correct: "b" },
+    { text: "Какое слово следует после слова «дверь» в ряду: дверь, окно, стена, ...", options: ["крыша", "стул", "пол", "шкаф"], correct: "a" },
+    { text: "Что из этого не является планетой?", options: ["Земля", "Венера", "Луна", "Юпитер"], correct: "c" },
+    { text: "Если послезавтра воскресенье, то сегодня...", options: ["пятница", "суббота", "воскресенье", "четверг"], correct: "a" },
+    { text: "Противоположно слову «жизнь» — это...", options: ["смерть", "рождение", "вдох", "движение"], correct: "a" },
+    { text: "🔴+🔴=🟡; 🔴+🟡=🟠; 🟠+🔴=?", options: ["🟡", "🔴", "🟠", "🔵"], correct: "c" },
+    { text: "Какое число пропущено? 3, 6, ___, 12, 15", options: ["7", "8", "9", "10"], correct: "c" },
+    { text: "Сколько треугольников на рисунке? (представьте, их 13)", options: ["10", "13", "15", "17"], correct: "b" },
+    { text: "Что не является частью компьютера?", options: ["Процессор", "Монитор", "Клавиатура", "Телевизор"], correct: "d" }
+  ];
+
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let currentUser = null;
+
+  const container = document.getElementById("testContainer");
+  const questionContainer = document.getElementById("questionContainer");
+  const nextBtn = document.getElementById("nextBtn");
+
+  function startTest() {
+    const username = document.getElementById("username").value.trim();
+    if (!username) {
+      alert("Введите своё имя!");
+      return;
+    }
+
+    currentUser = username;
+    document.querySelector(".container").style.display = "none";
+    container.classList.remove("hidden");
+    showQuestion();
+  }
+
+  function showQuestion() {
+    const q = questions[currentQuestionIndex];
+    questionContainer.innerHTML = `
+      <p class="question"><strong>${currentQuestionIndex + 1}. ${q.text}</strong></p>
+    `;
+    q.options.forEach((option, idx) => {
+      questionContainer.innerHTML += `
+        <label>
+          <input type="radio" name="answer" value="${String.fromCharCode(97 + idx)}">
+          ${option}
+        </label><br>`;
+    });
+  }
+
+  function nextQuestion() {
+    const selected = document.querySelector('input[name="answer"]:checked');
+    if (!selected) {
+      alert("Выберите ответ!");
+      return;
+    }
+
+    const q = questions[currentQuestionIndex];
+    if (selected.value === q.correct) {
+      score++;
+    }
+
+    currentQuestionIndex++;
+
+    if (currentQuestionIndex < questions.length) {
+      showQuestion();
+    } else {
+      saveResult();
+      showDashboard();
+    }
+  }
+
+  function saveResult() {
+    const key = `iq_results_${currentUser}`;
+    const results = JSON.parse(localStorage.getItem(key)) || [];
+    results.push(score);
+    localStorage.setItem(key, JSON.stringify(results));
+  }
+
+  function showDashboard() {
+    container.style.display = "none";
+    document.getElementById("dashboard").classList.remove("hidden");
+
+    const key = `iq_results_${currentUser}`;
+    const results = JSON.parse(localStorage.getItem(key)) || [];
+
+    document.getElementById("userGreeting").textContent = `Привет, ${currentUser}!`;
+    document.getElementById("lastScore").textContent = `${results[results.length - 1]} из ${questions.length}`;
+
+    renderChart(results);
+  }
+
+  function renderChart(data) {
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+
+    if (window.myChartInstance) window.myChartInstance.destroy();
+
+    window.myChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map((_, i) => `Тест ${i + 1}`),
+        datasets: [{
+          label: 'Правильные ответы (%)',
+          data: data.map(s => Math.round((s / questions.length) * 100)),
+          fill: true,
+          borderColor: '#fff',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              color: '#fff'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#fff'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#fff'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function restartTest() {
+    currentQuestionIndex = 0;
+    score = 0;
+    document.getElementById("dashboard").classList.add("hidden");
+    container.classList.remove("hidden");
+    showQuestion();
+  }
+</script>
+
+</body>
+</html>
